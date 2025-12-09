@@ -15,7 +15,7 @@ interface ApiConfig {
  * 从 localStorage 读取用户设置的 API Keys
  * 包含解码逻辑
  */
-function getApiConfig(): ApiConfig {
+const getApiConfig = (): ApiConfig => {
   try {
     const saved = localStorage.getItem('app-settings')
     if (!saved) {
@@ -58,7 +58,7 @@ function getApiConfig(): ApiConfig {
 /**
  * 解码字符串（Base64）
  */
-function decodeString(str: string): string {
+const decodeString = (str: string): string => {
   if (!str) return ''
   try {
     return decodeURIComponent(atob(str))
@@ -71,11 +71,11 @@ function decodeString(str: string): string {
 /**
  * 获取配置值，优先使用用户设置，回退到环境变量
  */
-function getConfigValue(
+const getConfigValue = (
   userValue: string | undefined,
   envValue: string | undefined,
   configName: string
-): string {
+): string => {
   const value = userValue || envValue
   if (!value) {
     throw createAppError(

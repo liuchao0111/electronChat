@@ -142,7 +142,7 @@ const handleFileChange = async (event: Event) => {
   }
 };
 
-function removeImage() {
+const removeImage = () => {
   images.value = "";
   selectedImagePath = undefined;
 }

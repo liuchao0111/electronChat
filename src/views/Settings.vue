@@ -142,19 +142,37 @@
                 <label class="block text-sm text-gray-600 mb-1">Access Key</label>
                 <input
                   v-model="apiConfigs.qianfan.accessKey"
+                  @blur="validateField('qianfan', 'accessKey', apiConfigs.qianfan.accessKey)"
                   type="password"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  :class="[
+                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2',
+                    validationErrors['qianfan.accessKey']
+                      ? 'border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:ring-green-500'
+                  ]"
                   placeholder="ALTAKxxxxxxxxxxx"
                 />
+                <p v-if="validationErrors['qianfan.accessKey']" class="mt-1 text-xs text-red-600">
+                  {{ validationErrors['qianfan.accessKey'] }}
+                </p>
               </div>
               <div>
                 <label class="block text-sm text-gray-600 mb-1">Secret Key</label>
                 <input
                   v-model="apiConfigs.qianfan.secretKey"
+                  @blur="validateField('qianfan', 'secretKey', apiConfigs.qianfan.secretKey)"
                   type="password"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  :class="[
+                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2',
+                    validationErrors['qianfan.secretKey']
+                      ? 'border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:ring-green-500'
+                  ]"
                   placeholder="0ad82210xxxxxxxxxxx"
                 />
+                <p v-if="validationErrors['qianfan.secretKey']" class="mt-1 text-xs text-red-600">
+                  {{ validationErrors['qianfan.secretKey'] }}
+                </p>
               </div>
             </div>
           </div>
@@ -183,18 +201,36 @@
                 <label class="block text-sm text-gray-600 mb-1">API Key</label>
                 <input
                   v-model="apiConfigs.dashscope.apiKey"
+                  @blur="validateField('dashscope', 'apiKey', apiConfigs.dashscope.apiKey)"
                   type="password"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  :class="[
+                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2',
+                    validationErrors['dashscope.apiKey']
+                      ? 'border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:ring-green-500'
+                  ]"
                   placeholder="sk-xxxxxxxxxxxxxxxx"
                 />
+                <p v-if="validationErrors['dashscope.apiKey']" class="mt-1 text-xs text-red-600">
+                  {{ validationErrors['dashscope.apiKey'] }}
+                </p>
               </div>
               <div>
                 <label class="block text-sm text-gray-600 mb-1">Base URL</label>
                 <input
                   v-model="apiConfigs.dashscope.baseUrl"
+                  @blur="validateField('dashscope', 'baseUrl', apiConfigs.dashscope.baseUrl)"
                   type="text"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  :class="[
+                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2',
+                    validationErrors['dashscope.baseUrl']
+                      ? 'border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:ring-green-500'
+                  ]"
                 />
+                <p v-if="validationErrors['dashscope.baseUrl']" class="mt-1 text-xs text-red-600">
+                  {{ validationErrors['dashscope.baseUrl'] }}
+                </p>
               </div>
             </div>
           </div>
@@ -223,18 +259,36 @@
                 <label class="block text-sm text-gray-600 mb-1">API Key</label>
                 <input
                   v-model="apiConfigs.deepseek.apiKey"
+                  @blur="validateField('deepseek', 'apiKey', apiConfigs.deepseek.apiKey)"
                   type="password"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  :class="[
+                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2',
+                    validationErrors['deepseek.apiKey']
+                      ? 'border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:ring-green-500'
+                  ]"
                   placeholder="sk-xxxxxxxxxxxxxxxx"
                 />
+                <p v-if="validationErrors['deepseek.apiKey']" class="mt-1 text-xs text-red-600">
+                  {{ validationErrors['deepseek.apiKey'] }}
+                </p>
               </div>
               <div>
                 <label class="block text-sm text-gray-600 mb-1">Base URL</label>
                 <input
                   v-model="apiConfigs.deepseek.baseUrl"
+                  @blur="validateField('deepseek', 'baseUrl', apiConfigs.deepseek.baseUrl)"
                   type="text"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  :class="[
+                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2',
+                    validationErrors['deepseek.baseUrl']
+                      ? 'border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:ring-green-500'
+                  ]"
                 />
+                <p v-if="validationErrors['deepseek.baseUrl']" class="mt-1 text-xs text-red-600">
+                  {{ validationErrors['deepseek.baseUrl'] }}
+                </p>
               </div>
             </div>
           </div>
@@ -263,22 +317,59 @@
                 <label class="block text-sm text-gray-600 mb-1">API Key</label>
                 <input
                   v-model="apiConfigs.openai.apiKey"
+                  @blur="validateField('openai', 'apiKey', apiConfigs.openai.apiKey)"
                   type="password"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  :class="[
+                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2',
+                    validationErrors['openai.apiKey']
+                      ? 'border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:ring-green-500'
+                  ]"
                   placeholder="sk-proj-xxxxxxxxxxxxxxxx"
                 />
+                <p v-if="validationErrors['openai.apiKey']" class="mt-1 text-xs text-red-600">
+                  {{ validationErrors['openai.apiKey'] }}
+                </p>
               </div>
               <div>
                 <label class="block text-sm text-gray-600 mb-1">Base URL</label>
                 <input
                   v-model="apiConfigs.openai.baseUrl"
+                  @blur="validateField('openai', 'baseUrl', apiConfigs.openai.baseUrl)"
                   type="text"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  :class="[
+                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2',
+                    validationErrors['openai.baseUrl']
+                      ? 'border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:ring-green-500'
+                  ]"
                 />
+                <p v-if="validationErrors['openai.baseUrl']" class="mt-1 text-xs text-red-600">
+                  {{ validationErrors['openai.baseUrl'] }}
+                </p>
               </div>
             </div>
           </div>
         </div>
+
+        <!-- 错误提示 -->
+        <Transition name="fade">
+          <div
+            v-if="saveError"
+            class="p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2"
+          >
+            <Icon icon="mdi:alert-circle" class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div class="flex-1">
+              <p class="text-sm text-red-800">{{ saveError }}</p>
+            </div>
+            <button
+              @click="saveError = null"
+              class="text-red-600 hover:text-red-800"
+            >
+              <Icon icon="mdi:close" class="w-5 h-5" />
+            </button>
+          </div>
+        </Transition>
 
         <!-- 操作按钮 -->
         <div class="flex gap-3 justify-end pt-4">
@@ -290,7 +381,13 @@
           </button>
           <button
             @click="saveApiConfigs"
-            class="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
+            :disabled="Object.keys(validationErrors).length > 0"
+            :class="[
+              'px-4 py-2 text-white rounded-md transition-colors',
+              Object.keys(validationErrors).length > 0
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-green-600 hover:bg-green-700'
+            ]"
           >
             保存
           </button>
@@ -301,9 +398,10 @@
       <Transition name="fade">
         <div
           v-if="showSavedMessage"
-          class="fixed bottom-6 right-6 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg"
+          class="fixed bottom-6 right-6 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2"
         >
-          保存成功
+          <Icon icon="mdi:check-circle" class="w-5 h-5" />
+          <span>保存成功</span>
         </div>
       </Transition>
     </div>
@@ -314,10 +412,12 @@
 import { ref, computed, onMounted, reactive } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useSettingsStore, type FontSize, type Theme, type Language } from '../stores/settings'
+import { validateApiKey, validateUrl, type ProviderType } from '../utils/validation'
 
 const settingsStore = useSettingsStore()
 const activeTab = ref<'general' | 'models'>('general')
 const showSavedMessage = ref(false)
+const saveError = ref<string | null>(null)
 
 const expandedProviders = reactive({
   qianfan: false,
@@ -332,6 +432,35 @@ const apiConfigs = ref({
   deepseek: { ...settingsStore.settings.apiKeys.deepseek },
   openai: { ...settingsStore.settings.apiKeys.openai },
 })
+
+// 验证状态
+const validationErrors = reactive<Record<string, string>>({})
+
+// 实时验证
+const validateField = (provider: string, field: string, value: string) => {
+  const key = `${provider}.${field}`
+  
+  if (!value) {
+    delete validationErrors[key]
+    return
+  }
+  
+  if (field === 'baseUrl') {
+    const result = validateUrl(value)
+    if (!result.valid) {
+      validationErrors[key] = result.error || '格式不正确'
+    } else {
+      delete validationErrors[key]
+    }
+  } else {
+    const result = validateApiKey(value, provider as ProviderType)
+    if (!result.valid) {
+      validationErrors[key] = result.error || '格式不正确'
+    } else {
+      delete validationErrors[key]
+    }
+  }
+}
 
 const fontSizes = computed(() => [
   { value: 'small' as FontSize, label: '小' },
@@ -359,11 +488,11 @@ const fontSizeClass = computed(() => {
   return sizeMap[settingsStore.settings.fontSize]
 })
 
-function toggleProvider(provider: keyof typeof expandedProviders) {
+const toggleProvider = (provider: keyof typeof expandedProviders) => {
   expandedProviders[provider] = !expandedProviders[provider]
 }
 
-function changeLanguage(lang: Language) {
+const changeLanguage = (lang: Language) => {
   settingsStore.updateLanguage(lang)
   // 更新菜单语言
   window.electronAPI?.updateMenuLanguage?.(lang)
@@ -371,14 +500,35 @@ function changeLanguage(lang: Language) {
   location.reload()
 }
 
-function saveApiConfigs() {
+const saveApiConfigs = () => {
+  // 清除之前的错误
+  saveError.value = null
+  
+  // 检查是否有验证错误
+  if (Object.keys(validationErrors).length > 0) {
+    saveError.value = '请修正输入错误后再保存'
+    return
+  }
+  
   let hasError = false
   let errorMessage = ''
 
+  // 验证所有配置
   const providers: Array<keyof typeof apiConfigs.value> = ['qianfan', 'dashscope', 'deepseek', 'openai']
   
   for (const provider of providers) {
-    const result = settingsStore.updateApiKey(provider, apiConfigs.value[provider])
+    const config = apiConfigs.value[provider]
+    
+    // 跳过空配置
+    if (provider === 'qianfan') {
+      const qianfanConfig = config as { accessKey: string; secretKey: string }
+      if (!qianfanConfig.accessKey && !qianfanConfig.secretKey) continue
+    } else {
+      const otherConfig = config as { apiKey: string; baseUrl: string }
+      if (!otherConfig.apiKey) continue
+    }
+    
+    const result = settingsStore.updateApiKey(provider, config)
     if (!result.success) {
       hasError = true
       errorMessage = result.error || '保存失败'
@@ -387,7 +537,7 @@ function saveApiConfigs() {
   }
 
   if (hasError) {
-    alert(`保存失败: ${errorMessage}`)
+    saveError.value = errorMessage
   } else {
     showSavedMessage.value = true
     setTimeout(() => {
@@ -396,7 +546,7 @@ function saveApiConfigs() {
   }
 }
 
-function resetSettings() {
+const resetSettings = () => {
   if (confirm('确定要重置所有设置吗？')) {
     settingsStore.resetSettings()
     apiConfigs.value = {

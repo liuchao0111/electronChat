@@ -21,6 +21,18 @@ export const useConversationStore = defineStore("conversation", {
       this.items.push({ id, ...createData });
       return id;
     },
+    async deleteConversation(id: number) {
+      // 删除对话
+      await db.conversations.delete(id);
+      // 删除对话相关的所有消息
+      await db.messages.where('conversationId').equals(id).delete();
+      // 从状态中移除
+      this.items = this.items.filter(item => item.id !== id);
+      // 如果删除的是当前选中的对话，清除选中状态
+      if (this.selectedId === id) {
+        this.selectedId = -1;
+      }
+    },
   },
   getters: {
     getConversationById: (state) => {

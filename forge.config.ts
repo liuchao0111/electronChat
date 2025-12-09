@@ -1,22 +1,38 @@
 import type { ForgeConfig } from '@electron-forge/shared-types';
-import { MakerSquirrel } from '@electron-forge/maker-squirrel';
+// import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { MakerZIP } from '@electron-forge/maker-zip';
-import { MakerDeb } from '@electron-forge/maker-deb';
-import { MakerRpm } from '@electron-forge/maker-rpm';
+import { MakerDMG } from '@electron-forge/maker-dmg';
+// import { MakerDeb } from '@electron-forge/maker-deb';
+// import { MakerRpm } from '@electron-forge/maker-rpm';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
+import { PublisherGithub } from '@electron-forge/publisher-github';
 
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    name: 'VChat',
+    executableName: 'vchat',
+    appBundleId: 'com.vchat.app',
+    appCategoryType: 'public.app-category.productivity',
+    icon: './assets/icon', // 如果有图标的话（不需要扩展名）
   },
   rebuildConfig: {},
   makers: [
-    new MakerSquirrel({}),
-    new MakerZIP({}, ['darwin']),
-    new MakerRpm({}),
-    new MakerDeb({}),
+    // new MakerSquirrel({}), // Windows 安装包
+    new MakerZIP({}, ['darwin', 'linux']), // macOS 和 Linux ZIP
+    new MakerDMG({
+      // DMG 配置（macOS 磁盘映像）
+      name: 'VChat',
+      format: 'ULFO', // 压缩格式：ULFO (最快), UDBZ (最小), UDZO (兼容)
+      overwrite: true,
+      // 可选配置（如果有资源文件可以取消注释）：
+      // background: './assets/dmg-background.png',
+      // icon: './assets/icon.icns',
+    }, ['darwin']), // 仅 macOS
+    // new MakerRpm({}), // Linux RPM
+    // new MakerDeb({}), // Linux DEB
   ],
   plugins: [
     new VitePlugin({
@@ -52,6 +68,16 @@ const config: ForgeConfig = {
       [FuseV1Options.EnableNodeCliInspectArguments]: false,
       [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
+    }),
+  ],
+  publishers: [
+    new PublisherGithub({
+      repository: {
+        owner: 'your-github-username', // 替换为你的 GitHub 用户名
+        name: 'vchat', // 替换为你的仓库名
+      },
+      prerelease: false, // 是否为预发布版本
+      draft: true, // 是否创建为草稿（推荐先设为 true，检查后再发布）
     }),
   ],
 };

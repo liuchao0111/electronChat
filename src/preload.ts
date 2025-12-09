@@ -23,4 +23,14 @@ contextBridge.exposeInMainWorld("electronAPI", {
   updateMenuLanguage: (language: 'zh-CN' | 'en-US') => {
     ipcRenderer.send("update-menu-language", language);
   },
+  
+  // 显示对话右键菜单
+  showConversationContextMenu: (conversationId: number) => {
+    ipcRenderer.send("show-conversation-context-menu", conversationId);
+  },
+  
+  // 监听右键菜单操作
+  onContextMenuDelete: (callback: (conversationId: number) => void) => {
+    ipcRenderer.on("context-menu-delete", (_event, conversationId) => callback(conversationId));
+  },
 });

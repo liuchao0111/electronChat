@@ -51,7 +51,7 @@ const DEFAULT_SETTINGS: SettingsState = {
  * 简单的字符串编码（Base64）
  * 注意：这不是真正的加密，只是混淆。生产环境应使用 Electron 的 safeStorage
  */
-function encodeString(str: string): string {
+const encodeString = (str: string): string => {
   if (!str) return ''
   try {
     return btoa(encodeURIComponent(str))
@@ -61,7 +61,7 @@ function encodeString(str: string): string {
   }
 }
 
-function decodeString(str: string): string {
+const decodeString = (str: string): string => {
   if (!str) return ''
   try {
     return decodeURIComponent(atob(str))
@@ -71,39 +71,20 @@ function decodeString(str: string): string {
   }
 }
 
-/**
- * 验证 API Key 格式
- */
-function validateApiKey(key: string, provider: keyof ApiKeyConfig): boolean {
-  if (!key) return true // 空值允许（用户可能还没配置）
-  
-  const patterns: Record<string, RegExp> = {
-    openai: /^sk-[a-zA-Z0-9-_]{20,}$/,
-    deepseek: /^sk-[a-zA-Z0-9]{20,}$/,
-    dashscope: /^sk-[a-zA-Z0-9]{20,}$/,
-    qianfan: /^[a-zA-Z0-9]{20,}$/, // Access Key 格式
-  }
-  
-  return patterns[provider]?.test(key) ?? true
-}
-
-/**
- * 验证 URL 格式
- */
-function validateUrl(url: string): boolean {
-  if (!url) return false
-  try {
-    new URL(url)
-    return true
-  } catch {
-    return false
-  }
-}
+// 导入验证工具
+import { 
+  validateApiKey as validateKey, 
+  validateUrl as validateUrlFormat,
+  validateQianfanConfig,
+  validateApiConfig,
+  normalizeUrl,
+  type ProviderType
+} from '../utils/validation'
 
 /**
  * 深度合并对象
  */
-function deepMerge<T>(target: T, source: Partial<T>): T {
+const deepMerge = <T>(target: T, source: Partial<T>): T => {
   const result = { ...target }
   for (const key in source) {
     if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
@@ -286,19 +267,37 @@ export const useSettingsStore = defineStore('settings', () => {
       // 验证输入
       if (provider === 'qianfan') {
         const qianfanConfig = config as Partial<ApiKeyConfig['qianfan']>
-        if (qianfanConfig.accessKey && !validateApiKey(qianfanConfig.accessKey, provider)) {
-          return { success: false, error: 'Access Key 格式不正确' }
+        const fullConfig = {
+          accessKey: qianfanConfig.accessKey || settings.value.apiKeys.qianfan.accessKey,
+          secretKey: qianfanConfig.secretKey || settings.value.apiKeys.qianfan.secretKey,
         }
-        if (qianfanConfig.secretKey && !validateApiKey(qianfanConfig.secretKey, provider)) {
-          return { success: false, error: 'Secret Key 格式不正确' }
+        
+        // 只有当两个都有值时才验证
+        if (fullConfig.accessKey && fullConfig.secretKey) {
+          const validation = validateQianfanConfig(fullConfig)
+          if (!validation.valid) {
+            return { success: false, error: validation.error }
+          }
         }
       } else {
         const otherConfig = config as Partial<ApiKeyConfig['openai']>
-        if (otherConfig.apiKey && !validateApiKey(otherConfig.apiKey, provider)) {
-          return { success: false, error: 'API Key 格式不正确' }
+        const currentConfig = settings.value.apiKeys[provider] as { apiKey: string; baseUrl: string }
+        const fullConfig = {
+          apiKey: otherConfig.apiKey || currentConfig.apiKey,
+          baseUrl: otherConfig.baseUrl || currentConfig.baseUrl,
         }
-        if (otherConfig.baseUrl && !validateUrl(otherConfig.baseUrl)) {
-          return { success: false, error: 'Base URL 格式不正确' }
+        
+        // 只有当 API Key 有值时才验证
+        if (fullConfig.apiKey) {
+          const validation = validateApiConfig(fullConfig, provider as ProviderType)
+          if (!validation.valid) {
+            return { success: false, error: validation.error }
+          }
+          
+          // 标准化 URL
+          if (otherConfig.baseUrl) {
+            otherConfig.baseUrl = normalizeUrl(otherConfig.baseUrl)
+          }
         }
       }
 

@@ -78,12 +78,12 @@ watch(
 )
 
 // 监听菜单事件
-function handleMenuNewConversation() {
+const handleMenuNewConversation = () => {
   console.log('Menu: New Conversation')
   router.push('/')
 }
 
-function handleMenuOpenSettings() {
+const handleMenuOpenSettings = () => {
   console.log('Menu: Open Settings')
   router.push('/settings')
 }

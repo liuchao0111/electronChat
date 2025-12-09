@@ -6,6 +6,8 @@ export interface IElectronAPI {
   onMenuNewConversation?: (callback: () => void) => void;
   onMenuOpenSettings?: (callback: () => void) => void;
   updateMenuLanguage?: (language: 'zh-CN' | 'en-US') => void;
+  showConversationContextMenu: (conversationId: number) => void;
+  onContextMenuDelete: (callback: (conversationId: number) => void) => void;
 }
 
 declare global {

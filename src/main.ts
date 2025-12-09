@@ -1,177 +1,183 @@
-import { app, BrowserWindow, ipcMain, protocol } from "electron";
-import path from "node:path";
-import fs from "fs/promises";
-import { lookup } from "mime-types";
-import started from "electron-squirrel-startup";
-import "dotenv/config";
-import { CreateChatProps } from "./types";
-import { createProvider } from "./providers/createProvider";
-import { initMenu, updateMenuLanguage } from "./menu";
+/**
+ * Electron 主进程入口
+ * 负责应用生命周期管理和模块初始化
+ */
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+import { app } from 'electron';
+import started from 'electron-squirrel-startup';
+import 'dotenv/config';
+import { initMenu } from './menu';
+import { registerAllIPCHandlers, cleanupIPCHandlers } from './ipc/handlers';
+import { registerAllProtocols, cleanupProtocols } from './ipc/protocol';
+import {
+  createMainWindow,
+  getOrCreateMainWindow,
+  closeAllWindows,
+  getAllWindows,
+} from './window/manager';
+
+// ============ 常量定义 ============
+
+const IS_DEV = process.env.NODE_ENV === 'development';
+
+// ============ 工具函数 ============
+
+/**
+ * 日志工具
+ */
+const logger = {
+  info: (...args: any[]) => {
+    if (IS_DEV) console.log('[MAIN-INFO]', ...args);
+  },
+  error: (...args: any[]) => {
+    console.error('[MAIN-ERROR]', ...args);
+  },
+  warn: (...args: any[]) => {
+    if (IS_DEV) console.warn('[MAIN-WARN]', ...args);
+  },
+};
+
+// ============ Windows 安装处理 ============
+
+// 处理 Windows 安装/卸载时的快捷方式创建
 if (started) {
   app.quit();
 }
 
-// 在窗口创建前注册 IPC 处理器
-// 先移除可能存在的旧处理器，避免重复注册
-ipcMain.removeHandler("copy-image-to-user-dir");
+// ============ 应用生命周期 ============
 
-ipcMain.handle(
-  "copy-image-to-user-dir",
-  async (_event, fileData: { buffer: ArrayBuffer; fileName: string }) => {
-    try {
-      // 参数验证
-      if (!fileData) {
-        console.error("copy-image-to-user-dir: fileData 参数为空");
-        throw new Error("fileData 参数为空");
-      }
-      if (!fileData.buffer) {
-        console.error("copy-image-to-user-dir: fileData.buffer 为空");
-        throw new Error("fileData.buffer 为空");
-      }
-      if (!fileData.fileName) {
-        console.error("copy-image-to-user-dir: fileData.fileName 为空");
-        throw new Error("fileData.fileName 为空");
-      }
+/**
+ * 应用准备就绪
+ */
+app.whenReady().then(async () => {
+  logger.info('应用启动中...');
+  logger.info('环境:', IS_DEV ? '开发环境' : '生产环境');
 
-      console.log("接收到文件数据:", {
-        fileName: fileData.fileName,
-        bufferSize: fileData.buffer.byteLength,
-      });
+  try {
+    // 1. 注册自定义协议
+    registerAllProtocols();
 
-      const userDataPath = app.getPath("userData");
-      const imagesDir = path.join(userDataPath, "images");
-      await fs.mkdir(imagesDir, { recursive: true });
+    // 2. 注册 IPC 处理器
+    // 需要传入 updateMenuLanguage 函数
+    const { updateMenuLanguage } = await import('./menu');
+    registerAllIPCHandlers(updateMenuLanguage);
 
-      const destPath = path.join(
-        imagesDir,
-        `${Date.now()}_${fileData.fileName}`
-      );
-      await fs.writeFile(destPath, Buffer.from(fileData.buffer));
+    // 3. 创建主窗口
+    await createMainWindow();
 
-      console.log("图片已保存到:", destPath);
-      return destPath;
-    } catch (error) {
-      console.error("保存图片失败，详细错误:", error);
-      throw error;
-    }
-  }
-);
+    // 4. 初始化应用菜单
+    initMenu();
 
-// 在窗口创建前注册 start-chat 处理器，避免重复注册
-ipcMain.removeAllListeners("start-chat");
-
-// 注册语言切换处理器
-ipcMain.on("update-menu-language", (_event, language: 'zh-CN' | 'en-US') => {
-  console.log('Updating menu language to:', language);
-  updateMenuLanguage(language);
-});
-
-// 注册自定义协议处理器（只注册一次）
-app.whenReady().then(() => {
-  protocol.handle("safe-file", async (request) => {
-    try {
-      console.log("safe-file 请求:", request.url);
-      const filePath = decodeURIComponent(
-        request.url.slice("safe-file://".length)
-      );
-      console.log("解析后的文件路径:", filePath);
-
-      const data = await fs.readFile(filePath);
-      const mimeType = lookup(filePath) || "application/octet-stream";
-
-      console.log("文件读取成功，MIME 类型:", mimeType);
-
-      return new Response(data, {
-        status: 200,
-        headers: {
-          "Content-Type": mimeType,
-        },
-      });
-    } catch (error) {
-      console.error("safe-file 协议处理失败:", error);
-      return new Response("File not found", { status: 404 });
-    }
-  });
-});
-
-const createWindow = async () => {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    title: "VChat",
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-      contextIsolation: true,
-      nodeIntegration: false,
-    },
-  });
-
-  ipcMain.on("start-chat", async (_event, data: CreateChatProps) => {
-    try {
-      if (!data) {
-        console.error("start-chat: data 参数为空");
-        return;
-      }
-      const { messageId, providerName, selectedModel, messages } = data;
-      if (!messages || !Array.isArray(messages)) {
-        console.error("start-chat: messages 无效", messages);
-        return;
-      }
-      console.log(providerName, "providerNameproviderNameproviderName");
-      const provider = createProvider(providerName);
-      const stream = await provider.chat(messages, selectedModel);
-      for await (const chunk of stream) {
-        const content = {
-          messageId,
-          data: chunk,
-        };
-        mainWindow.webContents.send("update-message", content);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  });
-
-  // and load the index.html of the app.
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
-  } else {
-    mainWindow.loadFile(
-      path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)
-    );
-  }
-
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
-};
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on("ready", () => {
-  createWindow();
-  initMenu(); // 初始化应用菜单
-});
-
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
+    logger.info('应用启动完成');
+  } catch (error) {
+    logger.error('应用启动失败:', error);
     app.quit();
   }
 });
 
-app.on("activate", () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
+/**
+ * 所有窗口关闭
+ */
+app.on('window-all-closed', () => {
+  logger.info('所有窗口已关闭');
+
+  // macOS 上保持应用运行
+  if (process.platform !== 'darwin') {
+    logger.info('退出应用');
+    app.quit();
   }
 });
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
+/**
+ * 应用激活（macOS）
+ */
+app.on('activate', async () => {
+  logger.info('应用被激活');
+
+  // macOS 上点击 Dock 图标时重新创建窗口
+  if (getAllWindows().length === 0) {
+    logger.info('没有窗口，创建新窗口');
+    await getOrCreateMainWindow();
+  }
+});
+
+/**
+ * 应用即将退出
+ */
+app.on('before-quit', () => {
+  logger.info('应用即将退出');
+});
+
+/**
+ * 应用退出
+ */
+app.on('will-quit', () => {
+  logger.info('清理资源...');
+
+  // 清理 IPC 处理器
+  cleanupIPCHandlers();
+
+  // 清理协议处理器
+  cleanupProtocols();
+
+  // 关闭所有窗口
+  closeAllWindows();
+
+  logger.info('资源清理完成');
+});
+
+// ============ 错误处理 ============
+
+/**
+ * 未捕获的异常
+ */
+process.on('uncaughtException', (error) => {
+  logger.error('未捕获的异常:', error);
+
+  // 生产环境可以发送错误报告
+  if (!IS_DEV) {
+    // TODO: 发送错误报告到服务器
+    // Sentry.captureException(error);
+  }
+
+  // 严重错误时退出应用
+  if (!IS_DEV) {
+    app.quit();
+  }
+});
+
+/**
+ * 未处理的 Promise 拒绝
+ */
+process.on('unhandledRejection', (reason) => {
+  logger.error('未处理的 Promise 拒绝:', reason);
+
+  // 生产环境可以发送错误报告
+  if (!IS_DEV) {
+    // TODO: 发送错误报告到服务器
+    // Sentry.captureException(reason);
+  }
+});
+
+/**
+ * 进程警告
+ */
+process.on('warning', (warning) => {
+  logger.warn('进程警告:', warning);
+});
+
+// ============ 性能监控 ============
+
+if (IS_DEV) {
+  // 开发环境监控应用启动时间
+  const startTime = Date.now();
+
+  app.on('ready', () => {
+    const duration = Date.now() - startTime;
+    logger.info(`应用启动耗时: ${duration}ms`);
+  });
+}
+
+// ============ 导出（用于测试） ============
+
+export { logger };
