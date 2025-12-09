@@ -10,4 +10,17 @@ contextBridge.exposeInMainWorld("electronAPI", {
   },
   copyImageToUserDir: (fileData: { buffer: ArrayBuffer; fileName: string }) => 
     ipcRenderer.invoke("copy-image-to-user-dir", fileData), // 返回文件路径
+  
+  // 菜单事件监听器
+  onMenuNewConversation: (callback: () => void) => {
+    ipcRenderer.on("menu-new-conversation", callback);
+  },
+  onMenuOpenSettings: (callback: () => void) => {
+    ipcRenderer.on("menu-open-settings", callback);
+  },
+  
+  // 更新菜单语言
+  updateMenuLanguage: (language: 'zh-CN' | 'en-US') => {
+    ipcRenderer.send("update-menu-language", language);
+  },
 });

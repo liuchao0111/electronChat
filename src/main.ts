@@ -1,14 +1,12 @@
-import { app, BrowserWindow, dialog, ipcMain, protocol } from "electron";
-import { ChatCompletion } from "@baiducloud/qianfan";
+import { app, BrowserWindow, ipcMain, protocol } from "electron";
 import path from "node:path";
 import fs from "fs/promises";
 import { lookup } from "mime-types";
 import started from "electron-squirrel-startup";
 import "dotenv/config";
-import OpenAI from "openai";
-import { convertMessages } from "./helper";
 import { CreateChatProps } from "./types";
 import { createProvider } from "./providers/createProvider";
+import { initMenu, updateMenuLanguage } from "./menu";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -63,6 +61,12 @@ ipcMain.handle(
 
 // 在窗口创建前注册 start-chat 处理器，避免重复注册
 ipcMain.removeAllListeners("start-chat");
+
+// 注册语言切换处理器
+ipcMain.on("update-menu-language", (_event, language: 'zh-CN' | 'en-US') => {
+  console.log('Updating menu language to:', language);
+  updateMenuLanguage(language);
+});
 
 // 注册自定义协议处理器（只注册一次）
 app.whenReady().then(() => {
@@ -147,7 +151,10 @@ const createWindow = async () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", createWindow);
+app.on("ready", () => {
+  createWindow();
+  initMenu(); // 初始化应用菜单
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
